@@ -62,7 +62,7 @@ body{
   transition:background-color .3s;
 }
 .window{
-  width:100%;max-width:460px;border-radius:14px;overflow:hidden;
+  width:100%;max-width:980px;border-radius:14px;overflow:hidden;
   background:var(--window);
   -webkit-backdrop-filter:saturate(180%) blur(30px);backdrop-filter:saturate(180%) blur(30px);
   box-shadow:var(--shadow);
@@ -70,17 +70,11 @@ body{
 }
 @keyframes pop{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:none}}
 .titlebar{
-  height:44px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
-  padding:0 12px;background:var(--titlebar);border-bottom:.5px solid var(--sep);
+  height:48px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;background:var(--titlebar);border-bottom:.5px solid var(--sep);
   -webkit-user-select:none;user-select:none;
 }
-.lights{display:flex;gap:8px}
-.lights span{width:12px;height:12px;border-radius:50%;box-shadow:inset 0 0 0 .5px rgba(0,0,0,.2)}
-.lights span:nth-child(1){background:#ff5f57}
-.lights span:nth-child(2){background:#febc2e}
-.lights span:nth-child(3){background:#28c840}
 .title{font-weight:600;font-size:13px;color:var(--text);opacity:.85}
-.tb-right{justify-self:end}
 
 /* Segmented control */
 .seg{display:inline-flex;background:var(--seg-bg);border-radius:8px;padding:2px;gap:2px}
@@ -96,7 +90,40 @@ body{
 .seg.wide{display:flex}
 .seg.wide button{flex:1;justify-content:center;padding:6px 10px;font-size:13px}
 
-.content{padding:24px 22px 22px}
+/* Layout: two columns on desktop, stacked on mobile */
+.content{
+  padding:28px;display:grid;gap:0 32px;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  grid-template-areas:"form preview" "opts preview" "msg preview";
+  align-items:start;
+}
+.col-form{grid-area:form}
+.col-opts{grid-area:opts}
+.col-preview{grid-area:preview;position:sticky;top:20px}
+#msg{grid-area:msg}
+.col-opts{display:none}
+.col-opts.show{display:block;animation:fade .3s ease}
+.empty{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  aspect-ratio:1/1;border-radius:14px;border:1.5px dashed var(--field-border);
+  color:var(--muted);font-size:13px;text-align:center;padding:24px;
+}
+.empty svg{width:56px;height:56px;opacity:.35}
+@media (max-width:760px){
+  body{padding:16px 12px max(24px,env(safe-area-inset-bottom))}
+  .content{padding:20px 18px;grid-template-columns:minmax(0,1fr);grid-template-areas:"form" "preview" "opts" "msg"}
+  .col-preview{position:static}
+  .empty{display:none}
+  h1{font-size:18px}
+}
+@media (max-width:420px){
+  body{padding:0}
+  .window{border-radius:0;min-height:100vh;box-shadow:none;max-width:none}
+  .titlebar{padding-top:env(safe-area-inset-top);height:calc(48px + env(safe-area-inset-top))}
+  .row .btn{padding:11px 14px;font-size:14px}
+  input[type=text]{font-size:16px} /* prevents iOS zoom on focus */
+  .ext{font-size:16px}
+}
 .hero{display:flex;align-items:center;gap:12px;margin-bottom:20px}
 .app-icon{
   width:44px;height:44px;border-radius:11px;flex:none;
@@ -130,14 +157,15 @@ input[type=text]:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 
 .btn:focus-visible{outline:none;box-shadow:0 0 0 3.5px var(--accent-ring)}
 .btn svg{width:15px;height:15px}
 
-#out{margin-top:22px;display:none}
+#out{display:none}
 #out.show{display:block;animation:fade .3s ease}
+@media (max-width:760px){#out.show{margin-top:20px}}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .preview{
-  display:flex;flex-direction:column;align-items:center;gap:10px;padding:18px;
-  border-radius:12px;background:var(--seg-bg);
+  display:flex;flex-direction:column;align-items:center;gap:12px;padding:24px;
+  border-radius:14px;background:var(--seg-bg);
 }
-#cv{width:100%;max-width:240px;height:auto;border-radius:10px;background:#fff;box-shadow:0 6px 20px rgba(0,0,0,.15)}
+#cv{width:100%;max-width:320px;height:auto;border-radius:10px;background:#fff;box-shadow:0 6px 20px rgba(0,0,0,.15)}
 .domain{font-size:12px;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .section{margin-top:16px}
 .name-wrap{display:flex;align-items:center;gap:0}
@@ -156,9 +184,8 @@ input[type=text]:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 
 <body>
 <div class="window" role="application" aria-label="QuickQR">
   <div class="titlebar">
-    <div class="lights" aria-hidden="true"><span></span><span></span><span></span></div>
     <div class="title">QuickQR</div>
-    <div class="tb-right">
+    <div>
       <div class="seg icons" id="theme" role="group" aria-label="Appearance">
         <button data-t="light" title="Light" aria-label="Light"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
         <button data-t="auto" title="Automatic" aria-label="Automatic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></button>
@@ -168,6 +195,7 @@ input[type=text]:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 
   </div>
 
   <main class="content">
+   <section class="col-form">
     <div class="hero">
       <div class="app-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h8v8H3zm2 2v4h4V5zm8-2h8v8h-8zm2 2v4h4V5zM3 13h8v8H3zm2 2v4h4v-4zm8-2h2v2h-2zm2 2h2v2h-2zm-2 2h2v2h-2zm4 0h2v2h-2zm2-4h2v2h-2zm0 4h2v4h-4v-2h2zm-4 2h2v2h-2z"/></svg></div>
       <div>
@@ -182,13 +210,22 @@ input[type=text]:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 
       <button id="gen" class="btn">Generate</button>
       <button id="clr" class="btn secondary">Clear</button>
     </div>
+   </section>
 
+   <section class="col-preview">
+    <div class="empty" id="empty">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 3h8v8H3zm2 2v4h4V5zm8-2h8v8h-8zm2 2v4h4V5zM3 13h8v8H3zm2 2v4h4v-4zm8-2h2v2h-2zm2 2h2v2h-2zm-2 2h2v2h-2zm4 0h2v2h-2zm2-4h2v2h-2zm0 4h2v4h-4v-2h2zm-4 2h2v2h-2z"/></svg>
+      Your QR code will appear here
+    </div>
     <div id="out">
       <div class="preview">
         <canvas id="cv" width="560" height="560" aria-label="Generated QR code"></canvas>
         <div class="domain" id="domain"></div>
       </div>
+    </div>
+   </section>
 
+   <section class="col-opts" id="opts">
       <div class="section">
         <label for="fname">File name</label>
         <div class="name-wrap">
@@ -210,7 +247,7 @@ input[type=text]:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 
         <button id="dl" class="btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Download</button>
         <button id="copy" class="btn secondary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>Copy image</button>
       </div>
-    </div>
+   </section>
 
     <div id="msg" role="status" aria-live="polite"></div>
     <div id="hidden"></div>
@@ -223,7 +260,11 @@ input[type=text]:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 
 (function(){
   var $=function(i){return document.getElementById(i)};
   var input=$('url'),out=$('out'),cv=$('cv'),msg=$('msg'),hid=$('hidden'),fname=$('fname'),ext=$('ext'),domainEl=$('domain');
-  var current='',modules=null,format='png',nameEdited=false;
+  var current='',modules=null,format='png',nameEdited=false,opts=$('opts'),empty=$('empty');
+  function showResult(on){
+    out.classList.toggle('show',on);opts.classList.toggle('show',on);
+    empty.style.display=on?'none':'';
+  }
   function say(t,ok){msg.textContent=t||'';msg.className=ok?'ok':''}
 
   /* ---------- Theme ---------- */
@@ -277,13 +318,13 @@ input[type=text]:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 
   /* ---------- Generate ---------- */
   function generate(){
     var text=input.value.trim();
-    if(!text){say('Please paste a link first.');out.classList.remove('show');input.focus();return}
+    if(!text){say('Please paste a link first.');showResult(false);input.focus();return}
     if(typeof QRCode==='undefined'){say('QR library failed to load. Check your connection and reload.');return}
     hid.innerHTML='';
     try{
       var q=new QRCode(hid,{text:text,width:480,height:480,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
       modules=q._oQRCode;
-    }catch(e){say('That text is too long for a QR code. Try a shorter link.');out.classList.remove('show');return}
+    }catch(e){say('That text is too long for a QR code. Try a shorter link.');showResult(false);return}
     var src=hid.querySelector('canvas');
     var ctx=cv.getContext('2d');
     ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);
@@ -292,7 +333,8 @@ input[type=text]:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 
     if(text!==current||!nameEdited){fname.value=baseName(text)+'-qr';nameEdited=false}
     current=text;
     domainEl.textContent=displayDomain(text);domainEl.title=text;
-    out.classList.add('show');say('');
+    showResult(true);say('');
+    if(window.matchMedia('(max-width:760px)').matches)out.scrollIntoView({behavior:'smooth',block:'start'});
   }
 
   function svgString(){
@@ -348,7 +390,7 @@ input[type=text]:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 
   /* ---------- Events ---------- */
   $('gen').addEventListener('click',generate);
   input.addEventListener('keydown',function(e){if(e.key==='Enter')generate()});
-  $('clr').addEventListener('click',function(){input.value='';out.classList.remove('show');current='';modules=null;nameEdited=false;say('');input.focus()});
+  $('clr').addEventListener('click',function(){input.value='';showResult(false);current='';modules=null;nameEdited=false;say('');input.focus()});
   fname.addEventListener('input',function(){nameEdited=true});
   fname.addEventListener('keydown',function(e){if(e.key==='Enter')download()});
   $('fmt').addEventListener('click',function(e){
