@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>QR Code Generator</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--text:#1b1f2a;--muted:#6b7280;--border:#e2e5ee;--accent:#4f46e5;--accent-text:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1117;--card:#181b24;--text:#eef0f6;--muted:#9aa1b2;--border:#2a2f3c;--accent:#818cf8;--accent-text:#0f1117;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1117;--card:#181b24;--text:#eef0f6;--muted:#9aa1b2;--border:#2a2f3c;--accent:#818cf8;--accent-text:#0f1117;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh;display:flex;justify-content:center;padding:24px 16px}
+.card{width:100%;max-width:440px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;align-self:flex-start}
+h1{font-size:1.4rem;margin:0 0 4px}
+p.sub{margin:0 0 20px;color:var(--muted);font-size:.95rem}
+label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:6px}
+input[type=text]{width:100%;padding:12px 14px;font-size:1rem;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text)}
+input[type=text]:focus{outline:2px solid var(--accent);border-color:transparent}
+.row{display:flex;gap:10px;margin-top:12px}
+button{flex:1;padding:12px 14px;font-size:1rem;font-weight:600;border:0;border-radius:10px;cursor:pointer;background:var(--accent);color:var(--accent-text)}
+button.secondary{background:transparent;color:var(--text);border:1px solid var(--border)}
+button:disabled{opacity:.5;cursor:not-allowed}
+#out{margin-top:22px;text-align:center;display:none}
+#out canvas{width:100%;max-width:300px;height:auto;border-radius:12px;border:1px solid var(--border);background:#fff}
+#msg{min-height:1.2em;margin-top:10px;font-size:.88rem;color:var(--muted)}
+#hidden{position:absolute;left:-9999px;top:0}
+</style>
+</head>
+<body>
+<main class="card">
+  <h1>QR Code Generator</h1>
+  <p class="sub">Paste a link, get a QR code, download it.</p>
+  <label for="url">Link or text</label>
+  <input id="url" type="text" placeholder="https://example.com" autocomplete="off" inputmode="url">
+  <div class="row"><button id="gen">Generate</button><button id="clr" class="secondary">Clear</button></div>
+  <div id="out">
+    <canvas id="cv" width="560" height="560"></canvas>
+    <label style="margin-top:16px">Download as</label>
+    <div class="row" style="margin-top:0"><button id="dlPng">PNG</button><button id="dlSvg" class="secondary">SVG</button><button id="dlPdf" class="secondary">PDF</button></div>
+  </div>
+  <div id="msg" role="status"></div>
+  <div id="hidden"></div>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  var input=$('url'),out=$('out'),cv=$('cv'),msg=$('msg'),hid=$('hidden');
+  var current='',modules=null;
+  function say(t){msg.textContent=t||''}
+
+  function generate(){
+    var text=input.value.trim();
+    if(!text){say('Please paste a link first.');out.style.display='none';return}
+    if(typeof QRCode==='undefined'){say('QR library failed to load. Check your connection and reload.');return}
+    hid.innerHTML='';
+    try{
+      var q=new QRCode(hid,{text:text,width:480,height:480,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+      modules=q._oQRCode;
+    }catch(e){say('That text is too long for a QR code. Try a shorter link.');out.style.display='none';return}
+    var src=hid.querySelector('canvas');
+    var ctx=cv.getContext('2d');
+    ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);
+    ctx.drawImage(src,40,40,480,480);
+    current=text;out.style.display='block';say('');
+  }
+
+  function svgString(){
+    var n=modules.getModuleCount(),cell=10,pad=4*cell,size=n*cell+pad*2,d='';
+    for(var r=0;r<n;r++)for(var c=0;c<n;c++)if(modules.isDark(r,c))d+='M'+(pad+c*cell)+' '+(pad+r*cell)+'h'+cell+'v'+cell+'h-'+cell+'z';
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+size+' '+size+'" width="'+size+'" height="'+size+'"><rect width="100%" height="100%" fill="#fff"/><path d="'+d+'" fill="#000"/></svg>';
+  }
+
+  function fileName(ext){
+    var base=current.replace(/^https?:\/\//i,'').replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'').slice(0,40)||'qr-code';
+    return 'qr-'+base+'.'+ext;
+  }
+
+  async function save(name,data){
+    var dl=null;
+    try{dl=await window.claude.use('downloads')}catch(e){}
+    if(!dl){say('Downloads are not available here. Long-press or right-click the QR code to save the image.');return}
+    try{await dl.save({filename:name,data:data});say('Saved '+name)}
+    catch(e){if(e&&e.code==='declined')say('Download cancelled.');else say('Could not save the file ('+((e&&e.code)||'error')+').')}
+  }
+
+  $('gen').addEventListener('click',generate);
+  input.addEventListener('keydown',function(e){if(e.key==='Enter')generate()});
+  $('clr').addEventListener('click',function(){input.value='';out.style.display='none';current='';say('');input.focus()});
+  $('dlPng').addEventListener('click',function(){
+    cv.toBlob(function(b){if(b)save(fileName('png'),b);else say('Could not create the image.')},'image/png');
+  });
+  $('dlPdf').addEventListener('click',function(){
+    if(!window.jspdf){say('PDF library failed to load. Reload the page and try again.');return}
+    try{
+      var doc=new window.jspdf.jsPDF({unit:'mm',format:'a4'});
+      var w=doc.internal.pageSize.getWidth(),s=110;
+      doc.addImage(cv.toDataURL('image/png'),'PNG',(w-s)/2,40,s,s);
+      doc.setFontSize(11);
+      var lines=doc.splitTextToSize(current,w-40);
+      doc.text(lines.slice(0,4),w/2,40+s+10,{align:'center'});
+      save(fileName('pdf'),doc.output('blob'));
+    }catch(e){say('Could not create the PDF.')}
+  });
+  $('dlSvg').addEventListener('click',function(){
+    if(!modules)return;
+    save(fileName('svg'),new Blob([svgString()],{type:'image/svg+xml'}));
+  });
+})();
+</script>
+</body>
+</html>
