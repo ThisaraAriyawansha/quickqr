@@ -4,6 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>QuickQR</title>
+<meta name="description" content="Paste a link, get a QR code, download it.">
+<link rel="icon" type="image/webp" href="public/pixora-QuickQR%20Speed%20Scan%20Icon.webp">
+<link rel="apple-touch-icon" href="public/pixora-QuickQR%20Speed%20Scan%20Icon.webp">
+<meta property="og:type" content="website">
+<meta property="og:title" content="QuickQR — QR Code Generator">
+<meta property="og:description" content="Paste a link, get a QR code, download it.">
+<meta property="og:image" content="public/pixora-QuickQR%20Speed%20Scan%20Icon.webp">
+<meta property="og:image:type" content="image/webp">
+<meta property="og:image:alt" content="QuickQR logo">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="QuickQR — QR Code Generator">
+<meta name="twitter:description" content="Paste a link, get a QR code, download it.">
+<meta name="twitter:image" content="public/pixora-QuickQR%20Speed%20Scan%20Icon.webp">
 <script>
 // Apply saved theme before paint to avoid a flash
 (function(){try{var t=localStorage.getItem('quickqr-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}})();
@@ -127,10 +140,10 @@ body{
 .hero{display:flex;align-items:center;gap:12px;margin-bottom:20px}
 .app-icon{
   width:44px;height:44px;border-radius:11px;flex:none;
-  background:linear-gradient(145deg,#5ac8fa,#0a84ff 55%,#5e5ce6);
-  display:grid;place-items:center;box-shadow:0 4px 12px rgba(10,132,255,.35),inset 0 1px 0 rgba(255,255,255,.35);
+  background:#fff;overflow:hidden;
+  box-shadow:0 4px 12px rgba(10,132,255,.25),0 0 0 1px rgba(0,0,0,.06);
 }
-.app-icon svg{width:26px;height:26px;color:#fff}
+.app-icon img{width:100%;height:100%;object-fit:cover;display:block}
 h1{font-size:20px;font-weight:700;letter-spacing:-.01em;margin:0}
 .sub{margin:2px 0 0;color:var(--muted);font-size:13px}
 
@@ -197,7 +210,7 @@ input[type=text]:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 
   <main class="content">
    <section class="col-form">
     <div class="hero">
-      <div class="app-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h8v8H3zm2 2v4h4V5zm8-2h8v8h-8zm2 2v4h4V5zM3 13h8v8H3zm2 2v4h4v-4zm8-2h2v2h-2zm2 2h2v2h-2zm-2 2h2v2h-2zm4 0h2v2h-2zm2-4h2v2h-2zm0 4h2v4h-4v-2h2zm-4 2h2v2h-2z"/></svg></div>
+      <div class="app-icon" aria-hidden="true"><img src="public/pixora-QuickQR%20Speed%20Scan%20Icon.webp" alt=""></div>
       <div>
         <h1>QR Code Generator</h1>
         <p class="sub">Paste a link, get a QR code, download it.</p>
